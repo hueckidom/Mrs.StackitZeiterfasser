@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link href="./styles.css" rel="stylesheet">
+    <title>Mrs.StackitZeitenstempler</title>
+    <style>
+      body {
+        display: flex;
+        overflow: hidden;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+        font-family: "Open Sans", "72", "72full", Arial, Helvetica, sans-serif;
+      }
+      #button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      button {
+        width: 220px;
+        padding: 12px;
+        font-size: 18px;
+        border-radius: 8px;
+        border: 2px solid #8a2093;
+        background-color: #8a2093;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+      button:hover {
+        background-color: #781581;
+        transform: scale(1.05);
+      }
+   
+      #loading{
+        position: fixed;
+        z-index: 2;
+        background-color: white;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #loadingStatus{
+        position: fixed;
+        z-index: 2;
+        background-color: white;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #settings-dialog{
+        position: fixed;
+        z-index: 1;
+        background-color: white;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #settings-btn{
+        position: fixed;
+        left: 0.25rem;
+        top: 0.25rem;
+        cursor: pointer;
+        font-size: 11px;
+        opacity: 0.8;
+        transition: all 0.3s;
+      }
+
+      #settings-btn:hover{
+        font-size: 12px;
+        opacity: 1;
+      }
+
+      input{
+        padding: 0.25rem;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .timer{
+        padding: 0.5rem;
+        text-align:center;
+        border-radius: 0.25rem;
+        border-color: transparent;
+        box-shadow: 0 0 .125rem 0 rgba(234, 197, 237, 0.2), 0 .125rem .25rem 0 rgba(234, 197, 237, 0.2);
+        background-color: white;
+      }
+
+      #version{
+        position: fixed;
+        bottom: 0.25rem;
+        right: 0.25rem;
+        font-size: 11px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="settings-dialog">
+      <p>Daten für federation.auth.schwarz</p>
+      <input placeholder="Auth username" type="text" id="username"/>
+      <input placeholder="Auth password" type="password" id="password" />
+      <hr >
+      <button id="statusAbholen">Status abholen</button>
+      <hr />
+      <button id="close-dialog">Schließen</button>
+    </div>
+
+    <div id="loadingStatus">
+      <span>Status wird abgeholt...</span>
+    </div>
+
+    <div id="button-container">
+      <div id="settings-btn">Einstellungen</div>
+      
+      <button id="kommen">Kommen</button>
+      <div class="timer" id="kommenTimeDisplay"></div>
+
+      <button id="gehen">Gehen</button>
+      <button id="pause-gehen">Ende Pause</button>
+      <button id="pause-kommen">Begin Pause</button>
+      <div class="timer" id="pauseKommenTimeDisplay"></div>
+
+      <div id="loading" class="loading">
+        <span>Aktion wird ausgeführt...</span>
+      </div>
+
+      <div id="version">v.0.0.1</div>
+    </div>
+    <script src="./renderer.js"></script>
+  </body>
+</html>
