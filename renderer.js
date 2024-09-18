@@ -197,7 +197,7 @@ document.getElementById("gehen").addEventListener("click", async () => {
     ...credentials(),
   });
 
-  statuses = statuses.filter((status) => status !== STATUS_GEHEN);
+  statuses = [];
   statuses.push(STATUS_KOMMEN);
   saveStatus(statuses);
 
@@ -218,8 +218,10 @@ document.getElementById("pause-gehen").addEventListener("click", async () => {
     ...credentials(),
   });
 
-  statuses = statuses.filter((status) => status !== STATUS_ENDE_PAUSE);
+  statuses = [];
   statuses.push(STATUS_GEHEN);
+  statuses.push(STATUS_BEGIN_PAUSE);
+
   saveStatus(statuses);
 
   if (pauseKommenInterval) {
@@ -241,7 +243,7 @@ document.getElementById("kommen").addEventListener("click", async () => {
 
   statuses = [];
   statuses.push(STATUS_GEHEN);
-  statuses.push(STATUS_ENDE_PAUSE);
+  statuses.push(STATUS_BEGIN_PAUSE);
   saveStatus(statuses);
 
   kommenTime = new Date().getTime();
@@ -261,8 +263,9 @@ document.getElementById("pause-kommen").addEventListener("click", async () => {
     ...credentials(),
   });
 
-  statuses = statuses.filter((status) => status !== STATUS_BEGIN_PAUSE);
+  statuses = [];
   statuses.push(STATUS_GEHEN);
+  statuses.push(STATUS_ENDE_PAUSE);
   saveStatus(statuses);
 
   kommenPauseTime = new Date().getTime();
