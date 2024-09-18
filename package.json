@@ -1,44 +1,36 @@
 {
-  "name": "electron-boilerplate",
-  "version": "1.1.2",
-  "description": "A Electron 32 Starter Boilerplate for JavaScript. Start creating your macOS and Windows apps right now!",
-  "author": "morellexf13",
+  "name": "mrsstackitzeiterfasser",
+  "version": "0.0.1",
+  "author": "dhueck",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/electron/electron-quick-start"
-  },
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
     "build": "electron-builder --dir",
     "app:dist": "electron-builder"
   },
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo",
-    "frameworkless",
-    "boilerplate"
-  ],
   "build": {
-    "productName": "electron-quick-start",
-    "appId": "electron-quick-start",
-    "mac": {
+    "productName": "Mrs.StackitZeiterfasser",
+    "appId": "mrs-stackit-zeiterfasser",
+    "win": {
       "target": [
         {
-          "target": "default",
-          "arch": "universal"
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
         }
-      ]
+      ],
+      "icon": "logo.png"
     }
+  },
+  "dependencies": {    
+    "puppeteer-core": "^23.3.0",
+    "edge-paths": "^3.0.5"
   },
   "devDependencies": {
     "electron": "^32.0.1",
-    "electron-builder": "^24.13.3",
-    "puppeteer-core":"^23.3.0",
-    "edge-paths" :"^3.0.5"
+    "electron-builder": "^24.13.3"
   }
 }
