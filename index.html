@@ -78,12 +78,28 @@
 
       #settings-btn{
         position: fixed;
+        right: 0.25rem;
+        top: 0.25rem;
+        cursor: pointer;
+        font-size: 11px;
+        opacity: 0.8;
+        transition: all 0.3s;
+      }
+
+      #statusAbholen{
+        position: fixed;
         left: 0.25rem;
         top: 0.25rem;
         cursor: pointer;
         font-size: 11px;
         opacity: 0.8;
         transition: all 0.3s;
+      }
+
+
+      #totals-container{
+        MARGIN:AUTO;
+        margin-top: 0.5rem;
       }
 
       #settings-btn:hover{
@@ -113,16 +129,45 @@
         font-size: 11px;
         opacity: 0.8;
       }
+
+      .times-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-family: Arial, sans-serif;
+}
+
+.times-table th, .times-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.times-table th {
+  color: white; /* White text */
+}
+
+.times-table tr:nth-child(even) {
+  background-color: #f2f2f2; /* Light grey for even rows */
+}
+
+.times-table tr:hover {
+  background-color: #ddd; /* Highlight on hover */
+}
+
+#timesGrid {
+  max-width: 600px; /* Limit the width of the table */
+  margin: auto; /* Center the table */
+}
     </style>
   </head>
   <body>
     <div id="settings-dialog">
-      <p>Daten für federation.auth.schwarz</p>
-      <input placeholder="Auth username" type="text" id="username"/>
-      <input placeholder="Auth password" type="password" id="password" />
-      <hr >
-      <button id="statusAbholen">Status abholen</button>
-      <hr />
+      <div class="times" id="timesGrid"></div>
+      <div id="totals-container">
+        <div id="total-kommen"></div>
+        <div id="total-pause"></div>
+      </div>      <hr />
       <button id="close-dialog">Schließen</button>
     </div>
 
@@ -131,7 +176,11 @@
     </div>
 
     <div id="button-container">
-      <div id="settings-btn">Einstellungen</div>
+      <div id="statusAbholen">Synchronisieren</div>
+
+      <div id="settings-btn">Zeiten</div>
+
+ 
       
       <button id="kommen">Kommen</button>
       <div class="timer" id="kommenTimeDisplay"></div>

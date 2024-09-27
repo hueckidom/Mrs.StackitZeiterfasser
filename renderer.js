@@ -12,6 +12,11 @@ let kommenPauseTime;
 let kommenInterval;
 let pauseKommenInterval;
 
+let totalKommen = 0;
+let totalPause = 0;
+
+let times = [];
+
 const startTimer = (elementId, startTime) => {
   const updateTimer = () => {
     const now = new Date().getTime();
@@ -73,27 +78,20 @@ const initStatus = () => {
     : [];
 };
 
-const displayForceAuthView = () => {
-  document.getElementById("statusAbholen").style.display = "none";
-  document.getElementById("settings-dialog").style.display = "flex";
-  document.getElementById("close-dialog").style.display = "none";
+const todayFormatted = () => {
+  const now = new Date();
+  const currentTime = now.toLocaleTimeString("en-US", { hour12: false });
+  return currentTime;
 };
 
 const initView = async () => {
-  loadAuthData();
-
-  if (!getUserName() && !getPassword()) {
-    displayForceAuthView();
-    return;
-  }
-
   showStatusLoading();
   try {
     initStatus();
 
     if (!statuses.length) {
       statuses = await ipcRenderer.invoke("fetch-stamp-status", {
-        ...credentials(),
+        ...moreData(),
       });
       saveStatus(statuses);
     }
@@ -121,18 +119,7 @@ const initView = async () => {
   }
 };
 
-const getUserName = () => {
-  return document.getElementById("username").value;
-};
-
-const getPassword = () => {
-  return document.getElementById("password").value;
-};
-
-const credentials = () => ({
-  username: getUserName(),
-  password: getPassword(),
-});
+const moreData = () => ({});
 
 const showLoading = () => {
   document.getElementById("loading").style.display = "flex";
@@ -152,6 +139,22 @@ const hideStatusLoading = () => {
   document.getElementById("statusAbholen").style.display = "block";
 };
 
+const stopTimes = () => {
+  if (pauseKommenInterval) {
+    clearInterval(pauseKommenInterval);
+  }
+
+  if (kommenInterval) {
+    clearInterval(kommenInterval);
+  }
+
+  clearTime("kommenPauseTime");
+  clearTime("kommenTime");
+
+  endTimer("kommenTimeDisplay");
+  endTimer("pauseKommenTimeDisplay");
+};
+
 document.getElementById("close-dialog").addEventListener("click", () => {
   document.getElementById("settings-dialog").style.display = "none";
 });
@@ -163,25 +166,15 @@ document.getElementById("settings-btn").addEventListener("click", () => {
 document.getElementById("statusAbholen").addEventListener("click", async () => {
   showStatusLoading();
   try {
+    stopTimes();
+
+    fetchTimes();
+
     statuses = await ipcRenderer.invoke("fetch-stamp-status", {
-      ...credentials(),
+      ...moreData(),
     });
     saveStatus(statuses);
     redrawView();
-
-    if (pauseKommenInterval) {
-      clearInterval(pauseKommenInterval);
-    }
-
-    if (kommenInterval) {
-      clearInterval(kommenInterval);
-    }
-
-    clearTime("kommenPauseTime");
-    clearTime("kommenTime");
-
-    endTimer("kommenTimeDisplay");
-    endTimer("pauseKommenTimeDisplay");
 
     document.getElementById("close-dialog").style.display = "block";
   } catch (error) {
@@ -194,7 +187,7 @@ document.getElementById("statusAbholen").addEventListener("click", async () => {
 document.getElementById("gehen").addEventListener("click", async () => {
   showLoading();
   await ipcRenderer.invoke("gehen-action", {
-    ...credentials(),
+    ...moreData(),
   });
 
   statuses = [];
@@ -208,6 +201,12 @@ document.getElementById("gehen").addEventListener("click", async () => {
   endTimer("kommenTimeDisplay");
   clearTime("kommenTime");
 
+  times.push({
+    status: STATUS_GEHEN,
+    time: todayFormatted(),
+  });
+  drawTimesTable(times);
+
   redrawView();
   hideLoading();
 });
@@ -215,7 +214,7 @@ document.getElementById("gehen").addEventListener("click", async () => {
 document.getElementById("pause-gehen").addEventListener("click", async () => {
   showLoading();
   await ipcRenderer.invoke("pause-gehen-action", {
-    ...credentials(),
+    ...moreData(),
   });
 
   statuses = [];
@@ -231,6 +230,12 @@ document.getElementById("pause-gehen").addEventListener("click", async () => {
   endTimer("pauseKommenTimeDisplay");
   clearTime("kommenPauseTime");
 
+  times.push({
+    status: STATUS_ENDE_PAUSE,
+    time: todayFormatted(),
+  });
+  drawTimesTable(times);
+
   redrawView();
   hideLoading();
 });
@@ -238,7 +243,7 @@ document.getElementById("pause-gehen").addEventListener("click", async () => {
 document.getElementById("kommen").addEventListener("click", async () => {
   showLoading();
   await ipcRenderer.invoke("kommen-action", {
-    ...credentials(),
+    ...moreData(),
   });
 
   statuses = [];
@@ -253,6 +258,12 @@ document.getElementById("kommen").addEventListener("click", async () => {
   }
   kommenInterval = startTimer("kommenTimeDisplay", kommenTime);
 
+  times.push({
+    status: STATUS_KOMMEN,
+    time: todayFormatted(),
+  });
+  drawTimesTable(times);
+
   redrawView();
   hideLoading();
 });
@@ -260,11 +271,10 @@ document.getElementById("kommen").addEventListener("click", async () => {
 document.getElementById("pause-kommen").addEventListener("click", async () => {
   showLoading();
   await ipcRenderer.invoke("pause-kommen-action", {
-    ...credentials(),
+    ...moreData(),
   });
 
   statuses = [];
-  statuses.push(STATUS_GEHEN);
   statuses.push(STATUS_ENDE_PAUSE);
   saveStatus(statuses);
 
@@ -275,47 +285,126 @@ document.getElementById("pause-kommen").addEventListener("click", async () => {
   }
   pauseKommenInterval = startTimer("pauseKommenTimeDisplay", kommenPauseTime);
 
+  times.push({
+    status: STATUS_BEGIN_PAUSE,
+    time: todayFormatted(),
+  });
+  drawTimesTable(times);
+
   redrawView();
   hideLoading();
 });
 
 document.addEventListener("DOMContentLoaded", initView);
 
-function encrypt(data) {
-  return btoa(data); //lol
-}
+const fetchTimes = async () => {
+  times = await ipcRenderer.invoke("fetch-times", {
+    ...moreData(),
+  });
+  // example times = [ {status:"Kommen", time:"07:39:29"},{status:"Gehen", time:"09:39:29"},{status:"Kommen", time:"10:39:29"}   ]
+  if (times.length > 0) {
+    // latest entry
 
-function decrypt(data) {
-  return atob(data); //lol
-}
+    const kommenGehen = times.filter(
+      (o) => o.status === STATUS_KOMMEN || o.status === STATUS_GEHEN
+    );
 
-document.getElementById("username").addEventListener("blur", function () {
-  const username = document.getElementById("username").value;
-  localStorage.setItem("encryptedUsername", encrypt(username));
+    if (kommenGehen[kommenGehen.length - 1]?.status === STATUS_KOMMEN) {
+      const timeParts = kommenGehen[kommenGehen.length - 1].time.split(":");
+      const kommenTime = new Date().setHours(
+        timeParts[0],
+        timeParts[1],
+        timeParts[2]
+      );
 
-  if (getUserName() && getPassword()) {
-    document.getElementById("statusAbholen").style.display = "block";
+      if (kommenInterval) {
+        clearInterval(kommenInterval);
+      }
+      kommenInterval = startTimer("kommenTimeDisplay", kommenTime);
+      saveTime("kommenTime", kommenTime);
+    }
+
+    const pauseGehen = times.filter(
+      (o) => o.status === STATUS_BEGIN_PAUSE || o.status === STATUS_ENDE_PAUSE
+    );
+
+    if (pauseGehen[pauseGehen.length - 1]?.status === STATUS_BEGIN_PAUSE) {
+      const timePParts = pauseGehen[pauseGehen.length - 1].time.split(":");
+      const pauseTime = new Date().setHours(
+        timePParts[0],
+        timePParts[1],
+        timePParts[2]
+      );
+
+      if (pauseKommenInterval) {
+        clearInterval(pauseKommenInterval);
+      }
+      pauseKommenInterval = startTimer("pauseKommenTimeDisplay", pauseTime);
+      saveTime("pauseTime", pauseTime);
+    }
+
+    // === Calc totals
+    totalKommen = 0;
+    totalPause = 0;
+    let lastKommenTime = null;
+
+    times.forEach(({ status, time }) => {
+      const timeParts = time.split(":");
+      const timeInSeconds =
+        parseInt(timeParts[0]) * 3600 +
+        parseInt(timeParts[1]) * 60 +
+        parseInt(timeParts[2]);
+
+      if (status === STATUS_KOMMEN) {
+        lastKommenTime = timeInSeconds;
+      } else if (status === STATUS_GEHEN && lastKommenTime !== null) {
+        totalKommen += timeInSeconds - lastKommenTime;
+        lastKommenTime = null;
+      } else if (status === STATUS_ENDE_PAUSE) {
+        totalPause += timeInSeconds;
+      }
+    });
+
+    document.getElementById("total-kommen").innerText =
+      "Toal Anwesend : " + formatTime(totalKommen);
+    document.getElementById("total-pause").innerText =
+      "Total Pause : " + formatTime(totalPause);
+
+    drawTimesTable(times);
   }
-});
+};
 
-document.getElementById("password").addEventListener("blur", function () {
-  const password = document.getElementById("password").value;
-  localStorage.setItem("encryptedPassword", encrypt(password));
+const drawTimesTable = (times) => {
+  const container = document.getElementById("timesGrid");
+  container.innerHTML = "";
 
-  if (getUserName() && getPassword()) {
-    document.getElementById("statusAbholen").style.display = "block";
-  }
-});
+  const table = document.createElement("table");
+  table.className = "times-table";
 
-const loadAuthData = () => {
-  const encryptedUsername = localStorage.getItem("encryptedUsername");
-  const encryptedPassword = localStorage.getItem("encryptedPassword");
+  const header = table.createTHead();
+  const headerRow = header.insertRow();
+  const statusHeader = headerRow.insertCell();
+  const timeHeader = headerRow.insertCell();
+  statusHeader.innerText = "Type";
+  timeHeader.innerText = "Zeit";
 
-  if (encryptedUsername) {
-    document.getElementById("username").value = decrypt(encryptedUsername);
-  }
+  // Create table body
+  const tbody = table.createTBody();
+  times.forEach(({ status, time }) => {
+    const row = tbody.insertRow();
+    const statusCell = row.insertCell();
+    const timeCell = row.insertCell();
+    statusCell.innerText = status;
+    timeCell.innerText = time;
+  });
 
-  if (encryptedPassword) {
-    document.getElementById("password").value = decrypt(encryptedPassword);
-  }
+  // Append the table to the container
+  container.appendChild(table);
+};
+
+const formatTime = (totalSeconds) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours}h ${minutes}m ${seconds}s`;
 };
